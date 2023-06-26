@@ -6,7 +6,7 @@ import Config
 
 config :logger,
   backends: [RingLogger],
-  level: :warn,
+  level: :info,
   metadata: [:session, :application, :module, :function, :file, :line, :addr, :port]
 
 # Use shoehorn to start the main application. See the shoehorn
@@ -48,6 +48,39 @@ if keys == [],
 config :nerves_ssh,
   authorized_keys: Enum.map(keys, &File.read!/1)
 
+wlan0_config =
+  case {System.get_env("WIFI_SSID"), System.get_env("WIFI_PASSPHRASE")} do
+    {nil, nil} ->
+      %{type: VintageNetWiFi}
+
+    {ssid, nil} ->
+      %{
+        type: VintageNetWiFi,
+        vintage_net_wifi: %{
+          networks: [
+            %{
+              ssid: ssid,
+              key_mgmt: :none
+            }
+          ]
+        }
+      }
+
+    {ssid, psk} ->
+      %{
+        type: VintageNetWiFi,
+        vintage_net_wifi: %{
+          networks: [
+            %{
+              ssid: ssid,
+              key_mgmt: :wpa_psk,
+              psk: psk
+            }
+          ]
+        }
+      }
+  end
+
 # Configure the network using vintage_net
 # See https://github.com/nerves-networking/vintage_net for more information
 config :vintage_net,
@@ -59,7 +92,7 @@ config :vintage_net,
        type: VintageNetEthernet,
        ipv4: %{method: :dhcp}
      }},
-    {"wlan0", %{type: VintageNetWiFi}}
+    {"wlan0", wlan0_config}
   ]
 
 config :mdns_lite,

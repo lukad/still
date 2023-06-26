@@ -16,6 +16,7 @@ defmodule Still.Application do
         # Children for all targets
         # Starts a worker by calling: Still.Worker.start_link(arg)
         # {Still.Worker, arg},
+        {Still.Printer.Supervisor, []},
         {Task.Supervisor, name: Still.Lpd.ClientSupervisor},
         {Still.Lpd.Server, port: 515}
         # {ThousandIsland,

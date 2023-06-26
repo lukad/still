@@ -3,7 +3,7 @@ defmodule Still.MixProject do
 
   @app :still
   @version "0.1.0"
-  @all_targets [:rpi0]
+  @all_targets [:rpi0, :rpi4]
 
   def project do
     [
@@ -22,7 +22,7 @@ defmodule Still.MixProject do
   def application do
     [
       mod: {Still.Application, []},
-      extra_applications: [:logger, :runtime_tools]
+      extra_applications: [:logger, :runtime_tools, :inets, :ssl]
     ]
   end
 
@@ -37,6 +37,9 @@ defmodule Still.MixProject do
       {:thousand_island, "~> 0.5.14"},
       {:nimble_parsec, "~> 1.2.3"},
       {:ulidex, "~> 0.2.1"},
+      {:circuits_spi, "~> 1.3"},
+      {:circuits_gpio, "~> 1.1"},
+      {:ex_png, "~> 1.0"},
 
       # Dependencies for all targets except :host
       {:nerves_runtime, "~> 0.13.0", targets: @all_targets},
@@ -47,7 +50,8 @@ defmodule Still.MixProject do
       # bumps to Nerves systems. Since these include Linux kernel and Erlang
       # version updates, please review their release notes in case
       # changes to your application are needed.
-      {:nerves_system_rpi0, "~> 1.19", runtime: false, targets: :rpi0}
+      {:nerves_system_rpi0, "~> 1.19", runtime: false, targets: :rpi0},
+      {:nerves_system_rpi4, "~> 1.22", runtime: false, targets: :rpi4}
     ]
   end
 
