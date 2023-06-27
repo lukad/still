@@ -1,0 +1,111 @@
+# Image to gameboy tile conversion
+
+```elixir
+Mix.install([
+  {:ex_png, "~> 1.0"},
+  {:kino, "~> 0.9.4"},
+  {:nx, "~> 0.5.3"}
+])
+```
+
+## Convert image to 2 bit grayscale
+
+```elixir
+# data = img.pixels |> List.flatten() |> Stream.map(fn <<r,g,b,_a>> -> trunc((r+g+b) / 3) end) |> Stream.map(fn value -> trunc(value / 255 * 4) end) |> Stream.chunk_every(4) |> Enum.reduce(<<>>, fn [a,b,c,d], acc -> acc <> <<a::2,b::2,c::2,d::2>> end)
+```
+
+```elixir
+width = 160
+height = 144
+```
+
+```elixir
+file_input = Kino.Input.image("Image", format: :rgb, size: {height, width}, fit: :crop)
+```
+
+```elixir
+image = Kino.Input.read(file_input)
+```
+
+```elixir
+grayscale =
+  image.data
+  |> :binary.bin_to_list()
+  |> Enum.chunk_every(3)
+  |> Enum.map(fn [r, g, b] -> 3 - trunc((r + g + b) / 3 / 200 * 3) end)
+```
+
+```elixir
+Enum.uniq(grayscale)
+```
+
+```elixir
+grayscale |> Nx.tensor() |> Nx.reshape({height, width}) |> Nx.to_heatmap()
+```
+
+## Convert grayscale image to tile data
+
+```elixir
+tile_size = 8
+tiles_per_row = div(width, tile_size)
+```
+
+```elixir
+rows = grayscale |> Enum.chunk_every(tiles_per_row * tile_size * tile_size)
+```
+
+```elixir
+length(rows)
+```
+
+```elixir
+length(Enum.at(rows, 0))
+```
+
+```elixir
+tiles =
+  rows
+  |> Enum.flat_map(fn row ->
+    tile_rows = row |> Enum.chunk_every(8)
+
+    Enum.map(0..(tiles_per_row - 1), fn offset ->
+      tile_rows |> Enum.drop(offset) |> Enum.take_every(tiles_per_row)
+    end)
+  end)
+```
+
+```elixir
+length(tiles)
+```
+
+## Convert tile data to 2bpp
+
+```elixir
+import Bitwise
+
+tile_bytes =
+  tiles
+  # |> Enum.take(1)
+  |> Enum.map(fn rows ->
+    Enum.map(rows, fn row ->
+      row
+      |> Enum.with_index()
+      |> Enum.reduce([0, 0], fn {pixel, i}, [lo, hi] ->
+        case pixel do
+          0 -> [lo, hi]
+          1 -> [lo ||| 1 <<< (7 - i), hi]
+          2 -> [lo, hi ||| 1 <<< (7 - i)]
+          3 -> [lo ||| 1 <<< (7 - i), hi ||| 1 <<< (7 - i)]
+        end
+      end)
+    end)
+  end)
+```
+
+```elixir
+IO.iodata_length(tile_bytes)
+```
+
+```elixir
+IO.puts(inspect(tile_bytes |> IO.iodata_to_binary(), limit: :infinity))
+```
