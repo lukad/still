@@ -30,12 +30,12 @@ defmodule Still.MixProject do
   defp deps do
     [
       # Dependencies for all targets
-      {:nerves, "~> 1.7.16 or ~> 1.8.0 or ~> 1.9.0", runtime: false},
+      {:nerves, "~> 1.10.0", runtime: false},
       {:shoehorn, "~> 0.9.1"},
-      {:ring_logger, "~> 0.8.5"},
-      {:toolshed, "~> 0.2.26"},
-      {:thousand_island, "~> 0.5.14"},
-      {:nimble_parsec, "~> 1.2.3"},
+      {:ring_logger, "~> 0.8"},
+      {:toolshed, "~> 0.3"},
+      {:thousand_island, "~> 0.6"},
+      {:nimble_parsec, "~> 1.3"},
       {:ulidex, "~> 0.2.1"},
       {:circuits_spi, "~> 1.3"},
       {:circuits_gpio, "~> 1.1"},
